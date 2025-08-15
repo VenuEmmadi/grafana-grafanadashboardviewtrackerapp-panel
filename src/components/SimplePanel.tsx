@@ -6,6 +6,7 @@ export const SimplePanel: React.FC<PanelProps> = (props) => {
     // Logged-in Grafana user
     const user = (window as any).grafanaBootData?.user;
     const username = user?.login || 'unknown';
+    const userId = user?.uid || null;
 
     // Try boot-data first
     let dashboardUID = (window as any).grafanaBootData?.dashboard?.uid;
@@ -35,6 +36,7 @@ export const SimplePanel: React.FC<PanelProps> = (props) => {
         const payload = {
           dashboard_uid: dashboardUID,
           username: username,
+          user_id: userId, // ⬅ Include user ID in payload
           timestamp: new Date().toISOString(),
         };
 
@@ -80,13 +82,8 @@ export const SimplePanel: React.FC<PanelProps> = (props) => {
 
   return (
     <div>
-      <h3>Dashboard View Tracker Panel</h3>
       <div>
         This panel sends a <b>usage-event</b> to the backend plugin.
-        <br />
-        <strong>
-          Only sends when the tab becomes visible the first time for the logged-in user 5.
-        </strong>
       </div>
     </div>
   );
