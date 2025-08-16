@@ -1,9 +1,9 @@
 import { PanelPlugin } from '@grafana/data';
-import { SimpleOptions } from './types';
 import { SimplePanel } from './components/SimplePanel';
+import { SimpleOptions } from './types';
 
-export const plugin = new PanelPlugin<SimpleOptions>(SimplePanel).setPanelOptions((builder) => {
-  return builder
+export const plugin = new PanelPlugin<SimpleOptions>(SimplePanel).setPanelOptions(builder =>
+  builder
     .addTextInput({
       path: 'text',
       name: 'Simple text option',
@@ -17,24 +17,20 @@ export const plugin = new PanelPlugin<SimpleOptions>(SimplePanel).setPanelOption
     })
     .addRadio({
       path: 'seriesCountSize',
-      defaultValue: 'sm',
       name: 'Series counter size',
+      defaultValue: 'sm',
       settings: {
         options: [
-          {
-            value: 'sm',
-            label: 'Small',
-          },
-          {
-            value: 'md',
-            label: 'Medium',
-          },
-          {
-            value: 'lg',
-            label: 'Large',
-          },
+          { value: 'sm', label: 'Small' },
+          { value: 'md', label: 'Medium' },
+          { value: 'lg', label: 'Large' },
         ],
       },
-      showIf: (config) => config.showSeriesCount,
-    });
-});
+      showIf: config => config.showSeriesCount,
+    })
+    .addTextInput({
+      path: 'datasourceUid',
+      name: 'Datasource UID',
+      description: 'Paste the UID of your Usage Event Backend datasource here (find in Configuration → Data Sources).',
+    })
+);

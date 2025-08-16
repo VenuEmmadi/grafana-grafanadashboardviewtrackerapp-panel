@@ -1,17 +1,27 @@
 import React, { useEffect } from 'react';
 import { PanelProps } from '@grafana/data';
+import { SimpleOptions } from '../types';
 
-export const SimplePanel: React.FC<PanelProps> = (props) => {
+export const SimplePanel: React.FC<PanelProps<SimpleOptions>> = (props) => {
+  const { datasourceUid, text } = props.options;
+
+  // Inform the user if the UID is missing
+  if (!datasourceUid) {
+    return (
+      <div style={{ color: 'red', padding: '10px' }}>
+        Please enter the Usage Event Backend datasource UID in the panel options.
+      </div>
+    );
+  }
+
   useEffect(() => {
-    // Logged-in Grafana user
+    // Get logged-in Grafana user info from boot data
     const user = (window as any).grafanaBootData?.user;
     const username = user?.login || 'unknown';
     const userId = user?.uid || null;
 
-    // Try boot-data first
+    // Get dashboard UID from boot data or fallback to URL parsing
     let dashboardUID = (window as any).grafanaBootData?.dashboard?.uid;
-
-    // Fallback to URL parsing if boot-data doesn't contain UID
     if (!dashboardUID) {
       const match = window.location.pathname.match(/^\/d\/([^/]+)/);
       if (match) {
@@ -22,13 +32,11 @@ export const SimplePanel: React.FC<PanelProps> = (props) => {
       }
     }
 
-    // If still no UID, skip sending
     if (!dashboardUID) {
       console.warn('Dashboard UID not found, cannot send usage event');
       return;
     }
 
-    // Prevent duplicate sends in same tab session
     const key = `usage_event_sent_${dashboardUID}_${username}`;
 
     const sendUsageEventIfNeeded = () => {
@@ -36,24 +44,14 @@ export const SimplePanel: React.FC<PanelProps> = (props) => {
         const payload = {
           dashboard_uid: dashboardUID,
           username: username,
-          user_id: userId, // ⬅ Include user ID in payload
+          user_id: userId,
           timestamp: new Date().toISOString(),
         };
 
-        // Get datasource UID from props or fallback
-        const datasourceUID =
-          props.data?.request?.targets?.[0]?.datasource?.uid || 'det49wwwzwjy8a';
-
-        if (!datasourceUID) {
-          console.error('No datasource UID found, cannot send usage event');
-          return;
-        }
-
-        fetch(`/api/datasources/uid/${datasourceUID}/resources/usage-event`, {
+        fetch(`/api/datasources/uid/${datasourceUid}/resources/usage-event`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            // Grafana session cookie used automatically
           },
           body: JSON.stringify(payload),
         })
@@ -71,20 +69,18 @@ export const SimplePanel: React.FC<PanelProps> = (props) => {
       }
     };
 
-    // Send on load (if visible) and whenever tab becomes visible
     sendUsageEventIfNeeded();
     document.addEventListener('visibilitychange', sendUsageEventIfNeeded);
 
+    // Cleanup
     return () => {
       document.removeEventListener('visibilitychange', sendUsageEventIfNeeded);
     };
-  }, [props]);
+  }, [datasourceUid, text]);
 
   return (
     <div>
-      <div>
-        This panel sends a <b>usage-event</b> to the backend plugin.
-      </div>
+      <p>This panel sends a <b>usage-event</b> to the backend plugin 17</p>
     </div>
   );
 };
